@@ -29,7 +29,9 @@ spec:
           user: {{ ocp4_workload_tenant_mta_user }}
           role: {{ ocp4_workload_tenant_mta_role }}
         seedTackle: {{ ocp4_workload_tenant_mta_seed }}
-        deployOperator: false
+        deployOperator: {{ ocp4_workload_tenant_mta_deploy_operator }}
+        operatorChannel: {{ ocp4_workload_tenant_mta_channel }}
+        useCatalogSnapshot: false
 {% if ocp4_workload_tenant_mta_seed | bool %}
         seedJob:
           repository: {{ ocp4_workload_tenant_mta_seed_image }}
