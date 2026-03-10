@@ -288,6 +288,7 @@ The role outputs the following user information via `agnosticd_user_info`:
 ----
 user_info:
   mta_url: https://mta-user-abc123-mta.apps.cluster.example.com
+  mta_api_url: https://mta-user-abc123-mta.apps.cluster.example.com/hub
   tackle_user: user-abc123
   tackle_password: password
 ----
@@ -298,6 +299,32 @@ user_info:
 ----
 user_info:
   mta_url: https://mta-user-abc123-mta.apps.cluster.example.com
+  mta_api_url: https://mta-user-abc123-mta.apps.cluster.example.com/hub
+----
+
+== Module Data for Reuse
+
+The role also saves data via `agnosticd_user_data` for consumption by other roles/modules:
+
+[source,yaml]
+----
+user_data:
+  mta_api_url: https://mta-user-abc123-mta.apps.cluster.example.com/hub
+  mta_namespace: user-abc123-mta
+----
+
+These values can be accessed by other roles using:
+
+[source,yaml]
+----
+# In another role's tasks
+- name: Use MTA API URL
+  debug:
+    msg: "MTA API is at {{ lookup('agnosticd_user_data', 'mta_api_url') }}"
+
+- name: Use MTA namespace
+  debug:
+    msg: "MTA namespace is {{ lookup('agnosticd_user_data', 'mta_namespace') }}"
 ----
 
 == Prerequisites Checklist

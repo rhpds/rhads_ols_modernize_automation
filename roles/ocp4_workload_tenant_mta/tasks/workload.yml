@@ -39,6 +39,9 @@
         mta_url: >-
           https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
           openshift_cluster_ingress_domain }}
+        mta_api_url: >-
+          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+          openshift_cluster_ingress_domain }}/hub
         tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
         tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
 
@@ -49,3 +52,14 @@
         mta_url: >-
           https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
           openshift_cluster_ingress_domain }}
+        mta_api_url: >-
+          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+          openshift_cluster_ingress_domain }}/hub
+
+  - name: Save MTA data for module reuse
+    agnosticd.core.agnosticd_user_data:
+      data:
+        mta_api_url: >-
+          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+          openshift_cluster_ingress_domain }}/hub
+        mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
