@@ -406,17 +406,63 @@ Or verify the `ocp4_workload_tenant_mta_user_app_project_prefix` and `ocp4_workl
 
 == Removal
 
-To remove the MTA tenant instance:
+The role automatically handles cleanup when `ACTION=destroy`:
+
+=== Automatic Removal Process
 
 [source,bash]
 ----
-# Set ACTION to destroy
+# Run with ACTION=destroy
 ACTION=destroy ansible-playbook playbook.yml
-
-# Or manually:
-oc delete application {user}-mta -n openshift-gitops
-oc delete namespace {user}-mta
 ----
+
+=== What Gets Removed
+
+The removal process follows these steps:
+
+1. **Delete ArgoCD Application**
+   - Removes the Application resource from `openshift-gitops` namespace
+   - ArgoCD finalizer automatically cleans up managed resources
+
+2. **Wait for Application Deletion**
+   - Waits up to 5 minutes for ArgoCD to complete cleanup
+   - ArgoCD removes all resources it created (Tackle CR, PVCs, Deployments, etc.)
+
+3. **Force Delete Namespace** (if still exists)
+   - Removes the MTA namespace as a safety measure
+   - Ensures complete cleanup even if ArgoCD finalizer fails
+
+4. **Resources Cleaned Up**
+   - ArgoCD Application
+   - Tackle Custom Resource
+   - MTA UI, Hub API, and PostgreSQL pods
+   - PersistentVolumeClaims
+   - Services and Routes
+   - Namespace
+
+=== Manual Removal
+
+If you need to manually remove the tenant instance:
+
+[source,bash]
+----
+# Delete the ArgoCD Application
+oc delete application {{ ocp4_workload_tenant_mta_user }}-mta -n openshift-gitops
+
+# Wait for ArgoCD to clean up resources (may take 1-5 minutes)
+oc wait --for=delete application/{{ ocp4_workload_tenant_mta_user }}-mta \
+  -n openshift-gitops --timeout=300s
+
+# Force delete namespace if still exists
+oc delete namespace {{ ocp4_workload_tenant_mta_namespace }}
+----
+
+=== Notes
+
+* ArgoCD Application has a finalizer (`resources-finalizer.argocd.argoproj.io`) that automatically removes all managed resources
+* The namespace deletion may hang if resources still exist - check for stuck finalizers
+* PVCs will be deleted, resulting in data loss
+* The MTA operator (cluster-wide) is NOT removed - only the tenant instance
 
 == Architecture Decisions
 

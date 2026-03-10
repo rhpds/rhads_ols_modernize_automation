@@ -1,4 +1,31 @@
 ---
-- name: Remove Workload is not implemented
+- name: Remove ArgoCD Application for MTA
+  kubernetes.core.k8s:
+    state: absent
+    api_version: argoproj.io/v1alpha1
+    kind: Application
+    name: "{{ ocp4_workload_tenant_mta_user }}-mta"
+    namespace: openshift-gitops
+
+- name: Wait for ArgoCD Application to be deleted
+  kubernetes.core.k8s_info:
+    api_version: argoproj.io/v1alpha1
+    kind: Application
+    name: "{{ ocp4_workload_tenant_mta_user }}-mta"
+    namespace: openshift-gitops
+  register: r_application
+  retries: 30
+  delay: 10
+  until: r_application.resources | length == 0
+  ignore_errors: true
+
+- name: Remove MTA namespace if still exists
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Namespace
+    name: "{{ ocp4_workload_tenant_mta_namespace }}"
+
+- name: Remove workload tasks complete
   ansible.builtin.debug:
-    msg: "Remove Workload is not implemented."
+    msg: "Remove Workload tasks completed successfully."
