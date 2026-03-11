@@ -31,8 +31,8 @@
     pod: vault-0
     command: "{{ item }}"
   loop:
-  - "vault kv put kv/secrets/mta/llm base_url='{{ lookup('rhpds.rhads_ols_modernize.agnosticd_user_data', 'litellm_api_base_url') }}'"
-  - "vault kv put kv/secrets/mta/llm api_key='{{ lookup('rhpds.rhads_ols_modernize.agnosticd_user_data', 'litellm_virtual_key') }}'"
+  - "vault kv put kv/secrets/mta/llm base_url='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_api_base_url') }}'"
+  - "vault kv put kv/secrets/mta/llm api_key='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_virtual_key') }}'"
 
 - name: Single user installation
   block:
