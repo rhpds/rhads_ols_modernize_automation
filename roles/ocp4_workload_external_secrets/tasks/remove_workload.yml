@@ -1,0 +1,31 @@
+---
+# --------------------------------------------------
+# Workload removal tasks
+# --------------------------------------------------
+
+- name: Delete ClusterSecretStore
+  kubernetes.core.k8s:
+    state: absent
+    api_version: external-secrets.io/v1beta1
+    kind: ClusterSecretStore
+    name: vault-secret-store
+  ignore_errors: true
+
+- name: Uninstall external-secrets helm chart
+  ansible.builtin.shell: |
+    helm uninstall external-secrets -n {{ ocp4_workload_external_secrets_namespace }}
+  ignore_errors: true
+  register: r_helm_uninstall
+
+- name: Delete external-secrets namespace
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Namespace
+    name: "{{ ocp4_workload_external_secrets_namespace }}"
+  ignore_errors: true
+
+- name: Remove workload tasks complete
+  ansible.builtin.debug:
+    msg: "Remove Workload tasks completed successfully."
+  when: not silent | bool

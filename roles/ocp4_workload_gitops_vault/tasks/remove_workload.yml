@@ -1,0 +1,55 @@
+---
+# --------------------------------------------------
+# Workload removal tasks
+# --------------------------------------------------
+
+- name: Delete vault ArgoCD Application
+  kubernetes.core.k8s:
+    state: absent
+    api_version: argoproj.io/v1alpha1
+    kind: Application
+    name: vault
+    namespace: openshift-gitops
+  ignore_errors: true
+
+- name: Delete vault auth secrets
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Secret
+    name: "{{ item }}"
+    namespace: "{{ ocp4_workload_gitops_vault_namespace }}"
+  loop:
+  - vault-token
+  - vault-auth-secret
+  ignore_errors: true
+
+- name: Delete vault service account
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: ServiceAccount
+    name: vault-auth
+    namespace: "{{ ocp4_workload_gitops_vault_namespace }}"
+  ignore_errors: true
+
+- name: Delete vault ClusterRoleBinding
+  kubernetes.core.k8s:
+    state: absent
+    api_version: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    name: role-tokenreview-binding
+  ignore_errors: true
+
+- name: Delete vault namespace
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Namespace
+    name: "{{ ocp4_workload_gitops_vault_namespace }}"
+  ignore_errors: true
+
+- name: Remove workload tasks complete
+  ansible.builtin.debug:
+    msg: "Remove Workload tasks completed successfully."
+  when: not silent | bool
