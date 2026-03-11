@@ -39,6 +39,11 @@ spec:
           pullPolicy: {{ ocp4_workload_tenant_mta_seed_pull_policy }}
 {% endif %}
         tackleInstance:
+          kaiSolutionServerEnabled: {{ ocp4_workload_tenant_mta_kai_solution_server_enabled }}
+{% if ocp4_workload_tenant_mta_kai_solution_server_enabled | bool %}
+          kaiLlmProvider: {{ ocp4_workload_tenant_mta_kai_llm_provider }}
+          kaiLlmModel: {{ ocp4_workload_tenant_mta_kai_llm_model }}
+{% endif %}
           rwxSupported: "{{ ocp4_workload_tenant_mta_rwx_supported | bool }}"
 {% if ocp4_workload_tenant_mta_feature_auth_required is defined %}
           featureAuthRequired: {{ ocp4_workload_tenant_mta_feature_auth_required }}
