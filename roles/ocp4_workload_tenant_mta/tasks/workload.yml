@@ -29,10 +29,10 @@
   kubernetes.core.k8s_exec:
     namespace: "{{ ocp4_workload_tenant_mta_vault_namespace }}"
     pod: vault-0
-    command: "{{ item }}"
-  loop:
-  - "vault kv put kv/secrets/mta/llm base_url='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_api_base_url') }}'"
-  - "vault kv put kv/secrets/mta/llm api_key='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_virtual_key') }}'"
+    command: >-
+      vault kv put kv/secrets/mta/llm
+      base_url='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_api_base_url') }}'
+      api_key='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_virtual_key') }}'
 
 - name: Single user installation
   block:
