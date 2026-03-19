@@ -19,13 +19,6 @@
   until: r_application.resources | length == 0
   ignore_errors: true
 
-- name: Remove MTA namespace if still exists
-  kubernetes.core.k8s:
-    state: absent
-    api_version: v1
-    kind: Namespace
-    name: "{{ ocp4_workload_tenant_mta_namespace }}"
-
 - name: Remove workload tasks complete
   ansible.builtin.debug:
     msg: "Remove Workload tasks completed successfully."
