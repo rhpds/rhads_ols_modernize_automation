@@ -34,41 +34,31 @@
       base_url='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_api_base_url') }}'
       api_key='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_virtual_key') }}'
 
-- name: Single user installation
-  block:
-  - name: Install MTA (single user)
-    kubernetes.core.k8s:
-      state: present
-      definition: "{{ lookup('template', 'application.yaml.j2') }}"
+- name: Install MTA (single user)
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'application.yaml.j2') }}"
 
-  - name: Save MTA user info (single user, auth enabled)
-    when: ocp4_workload_tenant_mta_feature_auth_required | default(true)
-    agnosticd.core.agnosticd_user_info:
-      data:
-        mta_url: >-
-          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}
-        mta_api_url: >-
-          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}
-        tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
-        tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
+- name: Save MTA user info (single user, auth enabled)
+  when: ocp4_workload_tenant_mta_feature_auth_required | default(true)
+  agnosticd.core.agnosticd_user_info:
+    data:
+      mta_url: >-
+        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}
+      mta_api_url: >-
+        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}/hub
+      tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
+      tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
 
-  - name: Save MTA user info (single user, auth disabled)
-    when: not ocp4_workload_tenant_mta_feature_auth_required | default(true)
-    agnosticd.core.agnosticd_user_info:
-      data:
-        mta_url: >-
-          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}
-        mta_api_url: >-
-          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}
-
-  - name: Save MTA data for module reuse
-    agnosticd.core.agnosticd_user_info:
-      data:
-        mta_api_url: >-
-          https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}
-        mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
+- name: Save MTA user info (single user, auth disabled)
+  when: not ocp4_workload_tenant_mta_feature_auth_required | default(true)
+  agnosticd.core.agnosticd_user_info:
+    data:
+      mta_url: >-
+        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}
+      mta_api_url: >-
+        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}/hub
