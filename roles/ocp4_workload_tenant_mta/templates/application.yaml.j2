@@ -13,8 +13,6 @@ spec:
     server: 'https://kubernetes.default.svc'
   project: "{{ ocp4_workload_tenant_mta_user_app_project_prefix }}-{{ ocp4_workload_tenant_mta_user }}"
   syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
     automated:
       prune: false
       selfHeal: false
