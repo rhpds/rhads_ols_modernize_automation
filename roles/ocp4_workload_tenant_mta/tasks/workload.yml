@@ -70,5 +70,5 @@
       data:
         mta_api_url: >-
           https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}/hub
+          openshift_cluster_ingress_domain }}
         mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
