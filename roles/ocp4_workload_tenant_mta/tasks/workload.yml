@@ -63,7 +63,7 @@
           openshift_cluster_ingress_domain }}
         mta_api_url: >-
           https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-          openshift_cluster_ingress_domain }}/hub
+          openshift_cluster_ingress_domain }}
 
   - name: Save MTA data for module reuse
     agnosticd.core.agnosticd_user_info:
