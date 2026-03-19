@@ -49,6 +49,7 @@
       mta_api_url: >-
         https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
         openshift_cluster_ingress_domain }}/hub
+      mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
       tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
       tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
 
@@ -62,3 +63,4 @@
       mta_api_url: >-
         https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
         openshift_cluster_ingress_domain }}/hub
+      mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
