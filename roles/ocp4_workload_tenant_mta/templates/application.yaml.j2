@@ -29,7 +29,14 @@ spec:
         seedTackle: {{ ocp4_workload_tenant_mta_seed }}
         deployOperator: {{ ocp4_workload_tenant_mta_deploy_operator }}
         operatorChannel: {{ ocp4_workload_tenant_mta_channel }}
-        useCatalogSnapshot: false
+        useCatalogSnapshot: {{ ocp4_workload_tenant_mta_use_catalog_snapshot }}
+{% if ocp4_workload_tenant_mta_use_catalog_snapshot | bool %}
+        catalogSource:
+          name: {{ ocp4_workload_tenant_mta_catalog_source_name }}
+          namespace: {{ ocp4_workload_tenant_mta_catalog_source_namespace }}
+          image: {{ ocp4_workload_tenant_mta_catalog_source_image }}
+          tag: {{ ocp4_workload_tenant_mta_catalog_source_tag }}
+{% endif %}
 {% if ocp4_workload_tenant_mta_seed | bool %}
         seedJob:
           repository: {{ ocp4_workload_tenant_mta_seed_image }}
