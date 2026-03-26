@@ -71,3 +71,10 @@ spec:
 {% if ocp4_workload_tenant_mta_pathfinder_database_data_volume_size | default("") | length > 0 %}
           pathfinderDatabaseDataVolumeSize: {{ ocp4_workload_tenant_mta_pathfinder_database_data_volume_size }}
 {% endif %}
+        oauthProxy:
+          enabled: {{ ocp4_workload_tenant_mta_oauth_proxy_enabled }}
+{% if ocp4_workload_tenant_mta_oauth_proxy_enabled | bool %}
+          image: {{ ocp4_workload_tenant_mta_oauth_proxy_image }}
+          routeName: {{ ocp4_workload_tenant_mta_oauth_proxy_route_name }}
+          enableRBAC: {{ ocp4_workload_tenant_mta_oauth_proxy_enable_rbac }}
+{% endif %}
