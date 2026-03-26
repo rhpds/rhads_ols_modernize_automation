@@ -1,0 +1,145 @@
+= ocp4_workload_cluster_mta_authentication
+
+== Role Overview
+
+This role configures authentication for Migration Toolkit for Applications (MTA) on OpenShift clusters.
+
+Currently supports:
+
+* Keycloak/RHSSO authentication
+
+== Requirements
+
+* OpenShift cluster
+* Keycloak/RHSSO instance with realm configured
+* `keycloak-initial-admin` Secret in the Keycloak namespace with keys `username` and `password` (created automatically by Keycloak operator)
+* Cluster ingress domain must be available
+
+NOTE: This is a cluster-level role that configures a single Keycloak client with wildcard redirect URIs to support multiple MTA instances across different user namespaces. Admin credentials are automatically retrieved from the `keycloak-initial-admin` Secret.
+
+== Role Variables
+
+[cols="3,2,1,4",options="header"]
+|===
+| Variable | Default Value | Required | Description
+
+| `ocp4_workload_cluster_mta_authentication_type`
+| `keycloak`
+| Yes
+| Authentication type. Options: `keycloak`, `none`
+
+| `ocp4_workload_cluster_mta_authentication_keycloak_namespace`
+| `keycloak`
+| No
+| Keycloak deployment namespace
+
+| `ocp4_workload_cluster_mta_authentication_keycloak_realm`
+| `""`
+| Yes (for keycloak)
+| Keycloak realm name
+
+| `ocp4_workload_cluster_mta_authentication_keycloak_url`
+| `""`
+| Yes (for keycloak)
+| Keycloak base URL (e.g., https://keycloak.example.com)
+
+| `ocp4_workload_cluster_mta_authentication_mta_client_id`
+| `mta-client`
+| No
+| Keycloak client ID for MTA
+
+| `openshift_cluster_ingress_domain`
+| (auto-detected)
+| Yes
+| Cluster ingress domain (e.g., apps.cluster.example.com) - used to build wildcard redirect URIs
+
+| `ocp4_workload_cluster_mta_authentication_client_secret`
+| `""`
+| No
+| Optional client secret. If set, creates a confidential client instead of public client
+
+|===
+
+== Example Playbook
+
+[source,yaml]
+----
+- name: Configure MTA Keycloak Authentication
+  hosts: localhost
+  tasks:
+    - name: Set up MTA authentication
+      ansible.builtin.include_role:
+        name: ocp4_workload_cluster_mta_authentication
+      vars:
+        ocp4_workload_cluster_mta_authentication_type: keycloak
+        ocp4_workload_cluster_mta_authentication_keycloak_namespace: keycloak
+        ocp4_workload_cluster_mta_authentication_keycloak_realm: my-realm
+        ocp4_workload_cluster_mta_authentication_keycloak_url: https://keycloak.apps.cluster.example.com
+----
+
+== What This Role Does
+
+When `authentication_type` is set to `keycloak`:
+
+1. Validates that the cluster ingress domain is available
+2. Retrieves Keycloak admin credentials from the `keycloak-initial-admin` Secret in the Keycloak namespace
+3. Authenticates to Keycloak using the retrieved admin credentials
+4. Creates or updates a Keycloak client for MTA with:
+   * **Wildcard redirect URIs** to support all MTA instances on the cluster (e.g., `https://mta-*.apps.cluster.example.com/*`)
+   * **Wildcard web origins** to allow CORS from any MTA instance
+   * OpenID Connect protocol enabled
+   * Public client configuration
+5. Saves authentication details to AgnosticD user info:
+   * Client ID
+   * Realm name
+   * Auth URL
+   * Token URL
+   * Issuer URL
+   * Redirect pattern
+
+When `authentication_type` is set to anything else:
+
+* Skips configuration (reserved for future authentication methods)
+
+== User Info Output
+
+The role provides the following information via `agnosticd_user_info`:
+
+[cols="2,3",options="header"]
+|===
+| Key | Description
+
+| `mta_keycloak_client_id`
+| The Keycloak client ID created for MTA
+
+| `mta_keycloak_realm`
+| The Keycloak realm name
+
+| `mta_keycloak_auth_url`
+| The authorization endpoint URL
+
+| `mta_keycloak_token_url`
+| The token endpoint URL
+
+| `mta_keycloak_issuer`
+| The issuer URL for the realm
+
+| `mta_keycloak_redirect_pattern`
+| The wildcard redirect URI pattern (e.g., `https://mta-*.apps.cluster.example.com/*`)
+
+| `mta_keycloak_client_secret`
+| The client secret (only present if configured as confidential client)
+
+|===
+
+== Dependencies
+
+None
+
+== License
+
+GNU General Public License v3.0
+
+== Author Information
+
+RHDPS Team

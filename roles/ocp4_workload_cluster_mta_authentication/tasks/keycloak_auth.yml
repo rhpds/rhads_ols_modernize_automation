@@ -1,0 +1,116 @@
+---
+- name: Assert cluster ingress domain is set
+  ansible.builtin.assert:
+    that:
+      - openshift_cluster_ingress_domain is defined
+      - openshift_cluster_ingress_domain | length > 0
+    fail_msg: "Cluster ingress domain must be set (openshift_cluster_ingress_domain)"
+
+- name: Assert Keycloak namespace is set
+  ansible.builtin.assert:
+    that:
+      - ocp4_workload_cluster_mta_authentication_keycloak_namespace is defined
+      - ocp4_workload_cluster_mta_authentication_keycloak_namespace | length > 0
+    fail_msg: "Keycloak namespace must be set (ocp4_workload_cluster_mta_authentication_keycloak_namespace)"
+
+- name: Set wildcard redirect URI pattern
+  ansible.builtin.set_fact:
+    _mta_redirect_pattern: "https://mta-*.{{ openshift_cluster_ingress_domain }}/*"
+    _mta_web_origin_pattern: "https://mta-*.{{ openshift_cluster_ingress_domain }}"
+
+- name: Get Keycloak admin credentials from Secret
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: keycloak-initial-admin
+    namespace: "{{ ocp4_workload_cluster_mta_authentication_keycloak_namespace }}"
+  register: r_keycloak_admin_secret
+
+- name: Assert Keycloak admin secret exists
+  ansible.builtin.assert:
+    that:
+      - r_keycloak_admin_secret.resources | length > 0
+    fail_msg: "Keycloak admin secret 'keycloak-initial-admin' not found in namespace '{{ ocp4_workload_cluster_mta_authentication_keycloak_namespace }}'"
+
+- name: Set Keycloak admin credentials
+  ansible.builtin.set_fact:
+    _keycloak_admin_user: "{{ r_keycloak_admin_secret.resources[0].data.username | b64decode }}"
+    _keycloak_admin_password: "{{ r_keycloak_admin_secret.resources[0].data.password | b64decode }}"
+  no_log: true
+
+- name: Get Keycloak admin token
+  ansible.builtin.uri:
+    url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/master/protocol/openid-connect/token"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      username: "{{ _keycloak_admin_user }}"
+      password: "{{ _keycloak_admin_password }}"
+      grant_type: password
+      client_id: admin-cli
+    status_code: 200
+    validate_certs: false
+  register: r_keycloak_token
+  no_log: true
+
+- name: Check if MTA client already exists
+  ansible.builtin.uri:
+    url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients?clientId={{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ r_keycloak_token.json.access_token }}"
+    status_code: 200
+    validate_certs: false
+  register: r_mta_client_check
+
+- name: Set client configuration
+  ansible.builtin.set_fact:
+    _mta_client_config:
+      clientId: "{{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
+      name: "Migration Toolkit for Applications"
+      description: "OpenID Connect client for MTA (cluster-wide)"
+      enabled: true
+      protocol: "{{ ocp4_workload_cluster_mta_authentication_client_protocol }}"
+      publicClient: "{{ true if ocp4_workload_cluster_mta_authentication_client_secret | default('') | length == 0 else false }}"
+      directAccessGrantsEnabled: "{{ ocp4_workload_cluster_mta_authentication_client_direct_access_grants }}"
+      standardFlowEnabled: "{{ ocp4_workload_cluster_mta_authentication_client_standard_flow }}"
+      implicitFlowEnabled: "{{ ocp4_workload_cluster_mta_authentication_client_implicit_flow }}"
+      redirectUris:
+        - "{{ _mta_redirect_pattern }}"
+        - "*"
+      webOrigins:
+        - "{{ _mta_web_origin_pattern }}"
+        - "*"
+      secret: "{{ ocp4_workload_cluster_mta_authentication_client_secret if ocp4_workload_cluster_mta_authentication_client_secret | default('') | length > 0 else omit }}"
+
+- name: Create MTA Keycloak client
+  when: r_mta_client_check.json | length == 0
+  ansible.builtin.uri:
+    url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ r_keycloak_token.json.access_token }}"
+      Content-Type: application/json
+    body_format: json
+    body: "{{ _mta_client_config }}"
+    status_code: 201
+    validate_certs: false
+
+- name: Set user info data
+  ansible.builtin.set_fact:
+    _mta_user_info:
+      mta_keycloak_client_id: "{{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
+      mta_keycloak_realm: "{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}"
+      mta_keycloak_auth_url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/auth"
+      mta_keycloak_token_url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/token"
+      mta_keycloak_issuer: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}"
+      mta_keycloak_redirect_pattern: "{{ _mta_redirect_pattern }}"
+
+- name: Add client secret to user info if configured
+  when: ocp4_workload_cluster_mta_authentication_client_secret | default('') | length > 0
+  ansible.builtin.set_fact:
+    _mta_user_info: "{{ _mta_user_info | combine({'mta_keycloak_client_secret': ocp4_workload_cluster_mta_authentication_client_secret}) }}"
+
+- name: Save MTA authentication details to user info
+  agnosticd.core.agnosticd_user_info:
+    data: "{{ _mta_user_info }}"

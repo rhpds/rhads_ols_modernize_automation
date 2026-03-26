@@ -1,0 +1,58 @@
+---
+- name: Remove MTA Keycloak client
+  when: ocp4_workload_cluster_mta_authentication_type == 'keycloak'
+  block:
+    - name: Get Keycloak admin credentials from Secret
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Secret
+        name: keycloak-initial-admin
+        namespace: "{{ ocp4_workload_cluster_mta_authentication_keycloak_namespace }}"
+      register: r_keycloak_admin_secret
+
+    - name: Set Keycloak admin credentials
+      when: r_keycloak_admin_secret.resources | length > 0
+      ansible.builtin.set_fact:
+        _keycloak_admin_user: "{{ r_keycloak_admin_secret.resources[0].data.username | b64decode }}"
+        _keycloak_admin_password: "{{ r_keycloak_admin_secret.resources[0].data.password | b64decode }}"
+      no_log: true
+
+    - name: Get Keycloak admin token
+      when: r_keycloak_admin_secret.resources | length > 0
+      ansible.builtin.uri:
+        url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/master/protocol/openid-connect/token"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          username: "{{ _keycloak_admin_user }}"
+          password: "{{ _keycloak_admin_password }}"
+          grant_type: password
+          client_id: admin-cli
+        status_code: 200
+        validate_certs: false
+      register: r_keycloak_token
+      no_log: true
+
+    - name: Get MTA client ID from Keycloak
+      when: r_keycloak_admin_secret.resources | length > 0
+      ansible.builtin.uri:
+        url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients?clientId={{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ r_keycloak_token.json.access_token }}"
+        status_code: [200, 404]
+        validate_certs: false
+      register: r_mta_client_check
+
+    - name: Delete MTA Keycloak client
+      when:
+        - r_keycloak_admin_secret.resources | length > 0
+        - r_mta_client_check.status == 200
+        - r_mta_client_check.json | length > 0
+      ansible.builtin.uri:
+        url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients/{{ r_mta_client_check.json[0].id }}"
+        method: DELETE
+        headers:
+          Authorization: "Bearer {{ r_keycloak_token.json.access_token }}"
+        status_code: [204, 404]
+        validate_certs: false

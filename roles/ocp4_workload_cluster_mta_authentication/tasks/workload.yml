@@ -1,0 +1,9 @@
+---
+- name: Set up MTA Keycloak authentication
+  when: ocp4_workload_cluster_mta_authentication_type == 'keycloak'
+  ansible.builtin.include_tasks: keycloak_auth.yml
+
+- name: Skip authentication setup
+  when: ocp4_workload_cluster_mta_authentication_type != 'keycloak'
+  ansible.builtin.debug:
+    msg: "Authentication type '{{ ocp4_workload_cluster_mta_authentication_type }}' is not implemented yet. Skipping."

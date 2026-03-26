@@ -34,6 +34,15 @@
       base_url='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_api_base_url') }}'
       api_key='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_virtual_key') }}'
 
+- name: Validate external Keycloak configuration
+  when: ocp4_workload_tenant_mta_use_external_keycloak | bool
+  ansible.builtin.assert:
+    that:
+      - ocp4_workload_tenant_mta_keycloak_realm | length > 0
+      - ocp4_workload_tenant_mta_keycloak_url | length > 0
+      - ocp4_workload_tenant_mta_keycloak_client_id | length > 0
+    fail_msg: "External Keycloak is enabled but required variables are not set (realm, url, client_id)"
+
 - name: Install MTA (single user)
   kubernetes.core.k8s:
     state: present

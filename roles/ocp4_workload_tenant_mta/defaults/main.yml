@@ -49,7 +49,24 @@ ocp4_workload_tenant_mta_user_app_project_prefix: appproject
 # --------------------------------
 # Tackle V2 specific settings
 # --------------------------------
+# External Keycloak Authentication
+# Set to true to use cluster-wide external Keycloak
+# Set to false to use MTA's embedded Keycloak or no authentication
+ocp4_workload_tenant_mta_use_external_keycloak: false
+
+# External Keycloak configuration (set via vars file when use_external_keycloak: true)
+ocp4_workload_tenant_mta_keycloak_realm: ""
+ocp4_workload_tenant_mta_keycloak_url: ""
+ocp4_workload_tenant_mta_keycloak_client_id: ""
+ocp4_workload_tenant_mta_keycloak_client_secret: ""
+
+# Legacy authentication setting
+# When ocp4_workload_tenant_mta_use_external_keycloak is false:
+#   - true: MTA deploys embedded Keycloak
+#   - false: No authentication
 ocp4_workload_tenant_mta_feature_auth_required: false
+
+# Storage settings
 ocp4_workload_tenant_mta_maven_data_volume_size: 10Gi
 ocp4_workload_tenant_mta_hub_database_volume_size: 5Gi
 ocp4_workload_tenant_mta_keycloak_database_data_volume_size: 1Gi
