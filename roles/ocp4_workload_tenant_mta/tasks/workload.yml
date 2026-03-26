@@ -44,7 +44,7 @@
   kubernetes.core.k8s_info:
     api_version: route.openshift.io/v1
     kind: Route
-    name: "{{ ocp4_workload_tenant_mta_oauth_proxy_route_name }}"
+    name: mta-secure
     namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
   register: r_oauth_route
   retries: 30
@@ -57,21 +57,22 @@
   when: ocp4_workload_tenant_mta_oauth_proxy_enabled | bool
   agnosticd.core.agnosticd_user_info:
     data:
-      mta_url: "https://{{ r_oauth_route.resources[0].spec.host }}"
-      mta_api_url: "https://{{ r_oauth_route.resources[0].spec.host }}/hub"
+      mta_url: "https://mta-secure-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}"
+      mta_api_url: "https://mta-api-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}"
       mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
       mta_auth: "OpenShift OAuth - use your OpenShift credentials"
       tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
       tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
 
-- name: Save MTA user info (OAuth proxy dinabled)
+- name: Save MTA user info (OAuth proxy disabled)
   when: not ocp4_workload_tenant_mta_oauth_proxy_enabled | bool
   agnosticd.core.agnosticd_user_info:
     data:
       mta_url: >-
         https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
         openshift_cluster_ingress_domain }}
-      mta_api_url: >-
-        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-        openshift_cluster_ingress_domain }}/hub
+      mta_api_url: "https://mta-api-{{ ocp4_workload_tenant_mta_namespace }}.{{
+        openshift_cluster_ingress_domain }}"
       mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
