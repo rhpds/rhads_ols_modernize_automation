@@ -68,7 +68,7 @@ spec:
 {% if ocp4_workload_tenant_mta_use_external_keycloak | bool %}
           externalKeycloakEnabled: true
           externalKeycloakRealm: {{ ocp4_workload_tenant_mta_keycloak_realm }}
-          externalKeycloakUrl: {{ ocp4_workload_tenant_mta_keycloak_url }}
+          externalKeycloakUrl: {{ _mta_keycloak_url }}
           externalKeycloakClientId: {{ ocp4_workload_tenant_mta_keycloak_client_id }}
 {% if ocp4_workload_tenant_mta_keycloak_client_secret | default("") | length > 0 %}
           externalKeycloakClientSecret: {{ ocp4_workload_tenant_mta_keycloak_client_secret }}

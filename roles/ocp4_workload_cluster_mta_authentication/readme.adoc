@@ -33,15 +33,15 @@ NOTE: This is a cluster-level role that configures a single Keycloak client with
 | No
 | Keycloak deployment namespace
 
+| `ocp4_workload_cluster_mta_authentication_keycloak_route_name`
+| `keycloak`
+| No
+| Keycloak route name (used to auto-detect Keycloak URL)
+
 | `ocp4_workload_cluster_mta_authentication_keycloak_realm`
 | `""`
 | Yes (for keycloak)
 | Keycloak realm name
-
-| `ocp4_workload_cluster_mta_authentication_keycloak_url`
-| `""`
-| Yes (for keycloak)
-| Keycloak base URL (e.g., https://keycloak.example.com)
 
 | `ocp4_workload_cluster_mta_authentication_mta_client_id`
 | `mta-client`
@@ -72,9 +72,10 @@ NOTE: This is a cluster-level role that configures a single Keycloak client with
         name: ocp4_workload_cluster_mta_authentication
       vars:
         ocp4_workload_cluster_mta_authentication_type: keycloak
-        ocp4_workload_cluster_mta_authentication_keycloak_namespace: keycloak
         ocp4_workload_cluster_mta_authentication_keycloak_realm: my-realm
-        ocp4_workload_cluster_mta_authentication_keycloak_url: https://keycloak.apps.cluster.example.com
+        # Optional: Override defaults if needed
+        # ocp4_workload_cluster_mta_authentication_keycloak_namespace: keycloak
+        # ocp4_workload_cluster_mta_authentication_keycloak_route_name: keycloak
 ----
 
 == What This Role Does
@@ -82,9 +83,10 @@ NOTE: This is a cluster-level role that configures a single Keycloak client with
 When `authentication_type` is set to `keycloak`:
 
 1. Validates that the cluster ingress domain is available
-2. Retrieves Keycloak admin credentials from the `keycloak-initial-admin` Secret in the Keycloak namespace
-3. Authenticates to Keycloak using the retrieved admin credentials
-4. Creates or updates a Keycloak client for MTA with:
+2. Retrieves Keycloak URL from the Keycloak route
+3. Retrieves Keycloak admin credentials from the `keycloak-initial-admin` Secret in the Keycloak namespace
+4. Authenticates to Keycloak using the retrieved admin credentials
+5. Creates or updates a Keycloak client for MTA with:
    * **Wildcard redirect URIs** to support all MTA instances on the cluster:
      - Specific callback: `https://mta-*.apps.cluster.example.com/hub/oidc-callback`
      - General wildcard: `https://mta-*.apps.cluster.example.com/*`
@@ -92,7 +94,7 @@ When `authentication_type` is set to `keycloak`:
    * **Wildcard web origins** to allow CORS from any MTA instance
    * OpenID Connect protocol enabled
    * Public client configuration (or confidential if secret provided)
-5. Saves authentication details to AgnosticD user info:
+6. Saves authentication details to AgnosticD user info:
    * Client ID
    * Realm name
    * Auth URL

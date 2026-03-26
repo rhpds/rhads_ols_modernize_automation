@@ -13,6 +13,24 @@
       - ocp4_workload_cluster_mta_authentication_keycloak_namespace | length > 0
     fail_msg: "Keycloak namespace must be set (ocp4_workload_cluster_mta_authentication_keycloak_namespace)"
 
+- name: Get Keycloak route
+  kubernetes.core.k8s_info:
+    api_version: route.openshift.io/v1
+    kind: Route
+    name: "{{ ocp4_workload_cluster_mta_authentication_keycloak_route_name }}"
+    namespace: "{{ ocp4_workload_cluster_mta_authentication_keycloak_namespace }}"
+  register: r_keycloak_route
+
+- name: Assert Keycloak route exists
+  ansible.builtin.assert:
+    that:
+      - r_keycloak_route.resources | length > 0
+    fail_msg: "Keycloak route '{{ ocp4_workload_cluster_mta_authentication_keycloak_route_name }}' not found in namespace '{{ ocp4_workload_cluster_mta_authentication_keycloak_namespace }}'"
+
+- name: Set Keycloak URL from route
+  ansible.builtin.set_fact:
+    _keycloak_url: "https://{{ r_keycloak_route.resources[0].spec.host }}"
+
 - name: Set wildcard web origin pattern
   ansible.builtin.set_fact:
     _mta_web_origin_pattern: "https://mta-*.{{ openshift_cluster_ingress_domain }}"
@@ -39,7 +57,7 @@
 
 - name: Get Keycloak admin token
   ansible.builtin.uri:
-    url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/master/protocol/openid-connect/token"
+    url: "{{ _keycloak_url }}/realms/master/protocol/openid-connect/token"
     method: POST
     body_format: form-urlencoded
     body:
@@ -54,7 +72,7 @@
 
 - name: Check if MTA client already exists
   ansible.builtin.uri:
-    url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients?clientId={{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
+    url: "{{ _keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients?clientId={{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
     method: GET
     headers:
       Authorization: "Bearer {{ r_keycloak_token.json.access_token }}"
@@ -86,7 +104,7 @@
 - name: Create MTA Keycloak client
   when: r_mta_client_check.json | length == 0
   ansible.builtin.uri:
-    url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients"
+    url: "{{ _keycloak_url }}/admin/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/clients"
     method: POST
     headers:
       Authorization: "Bearer {{ r_keycloak_token.json.access_token }}"
@@ -101,9 +119,9 @@
     _mta_user_info:
       mta_keycloak_client_id: "{{ ocp4_workload_cluster_mta_authentication_mta_client_id }}"
       mta_keycloak_realm: "{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}"
-      mta_keycloak_auth_url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/auth"
-      mta_keycloak_token_url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/token"
-      mta_keycloak_issuer: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}"
+      mta_keycloak_auth_url: "{{ _keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/auth"
+      mta_keycloak_token_url: "{{ _keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/token"
+      mta_keycloak_issuer: "{{ _keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}"
       mta_keycloak_callback_path: "/hub/oidc-callback"
 
 - name: Add client secret to user info if configured

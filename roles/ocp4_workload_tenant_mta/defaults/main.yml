@@ -55,8 +55,9 @@ ocp4_workload_tenant_mta_user_app_project_prefix: appproject
 ocp4_workload_tenant_mta_use_external_keycloak: false
 
 # External Keycloak configuration (set via vars file when use_external_keycloak: true)
+ocp4_workload_tenant_mta_keycloak_namespace: keycloak
+ocp4_workload_tenant_mta_keycloak_route_name: keycloak
 ocp4_workload_tenant_mta_keycloak_realm: ""
-ocp4_workload_tenant_mta_keycloak_url: ""
 ocp4_workload_tenant_mta_keycloak_client_id: ""
 ocp4_workload_tenant_mta_keycloak_client_secret: ""
 

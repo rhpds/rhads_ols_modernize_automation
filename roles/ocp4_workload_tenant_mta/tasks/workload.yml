@@ -34,14 +34,28 @@
       base_url='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_api_base_url') }}'
       api_key='{{ lookup('agnosticd.core.agnosticd_user_data', 'litellm_virtual_key') }}'
 
+- name: Get Keycloak route for external authentication
+  when: ocp4_workload_tenant_mta_use_external_keycloak | bool
+  kubernetes.core.k8s_info:
+    api_version: route.openshift.io/v1
+    kind: Route
+    name: "{{ ocp4_workload_tenant_mta_keycloak_route_name }}"
+    namespace: "{{ ocp4_workload_tenant_mta_keycloak_namespace }}"
+  register: r_keycloak_route
+
+- name: Set Keycloak URL from route
+  when: ocp4_workload_tenant_mta_use_external_keycloak | bool
+  ansible.builtin.set_fact:
+    _mta_keycloak_url: "https://{{ r_keycloak_route.resources[0].spec.host }}"
+
 - name: Validate external Keycloak configuration
   when: ocp4_workload_tenant_mta_use_external_keycloak | bool
   ansible.builtin.assert:
     that:
       - ocp4_workload_tenant_mta_keycloak_realm | length > 0
-      - ocp4_workload_tenant_mta_keycloak_url | length > 0
       - ocp4_workload_tenant_mta_keycloak_client_id | length > 0
-    fail_msg: "External Keycloak is enabled but required variables are not set (realm, url, client_id)"
+      - r_keycloak_route.resources | length > 0
+    fail_msg: "External Keycloak is enabled but required configuration is missing (realm, client_id, or Keycloak route)"
 
 - name: Install MTA (single user)
   kubernetes.core.k8s:
