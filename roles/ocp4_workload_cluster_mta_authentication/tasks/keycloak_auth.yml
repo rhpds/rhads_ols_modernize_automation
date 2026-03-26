@@ -13,9 +13,8 @@
       - ocp4_workload_cluster_mta_authentication_keycloak_namespace | length > 0
     fail_msg: "Keycloak namespace must be set (ocp4_workload_cluster_mta_authentication_keycloak_namespace)"
 
-- name: Set wildcard redirect URI pattern
+- name: Set wildcard web origin pattern
   ansible.builtin.set_fact:
-    _mta_redirect_pattern: "https://mta-*.{{ openshift_cluster_ingress_domain }}/*"
     _mta_web_origin_pattern: "https://mta-*.{{ openshift_cluster_ingress_domain }}"
 
 - name: Get Keycloak admin credentials from Secret
@@ -76,7 +75,8 @@
       standardFlowEnabled: true
       implicitFlowEnabled: false
       redirectUris:
-        - "{{ _mta_redirect_pattern }}"
+        - "https://mta-*.{{ openshift_cluster_ingress_domain }}/hub/oidc-callback"
+        - "https://mta-*.{{ openshift_cluster_ingress_domain }}/*"
         - "*"
       webOrigins:
         - "{{ _mta_web_origin_pattern }}"
@@ -104,7 +104,7 @@
       mta_keycloak_auth_url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/auth"
       mta_keycloak_token_url: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}/protocol/openid-connect/token"
       mta_keycloak_issuer: "{{ ocp4_workload_cluster_mta_authentication_keycloak_url }}/realms/{{ ocp4_workload_cluster_mta_authentication_keycloak_realm }}"
-      mta_keycloak_redirect_pattern: "{{ _mta_redirect_pattern }}"
+      mta_keycloak_callback_path: "/hub/oidc-callback"
 
 - name: Add client secret to user info if configured
   when: ocp4_workload_cluster_mta_authentication_client_secret | default('') | length > 0

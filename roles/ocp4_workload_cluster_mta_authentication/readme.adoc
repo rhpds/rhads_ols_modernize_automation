@@ -85,10 +85,13 @@ When `authentication_type` is set to `keycloak`:
 2. Retrieves Keycloak admin credentials from the `keycloak-initial-admin` Secret in the Keycloak namespace
 3. Authenticates to Keycloak using the retrieved admin credentials
 4. Creates or updates a Keycloak client for MTA with:
-   * **Wildcard redirect URIs** to support all MTA instances on the cluster (e.g., `https://mta-*.apps.cluster.example.com/*`)
+   * **Wildcard redirect URIs** to support all MTA instances on the cluster:
+     - Specific callback: `https://mta-*.apps.cluster.example.com/hub/oidc-callback`
+     - General wildcard: `https://mta-*.apps.cluster.example.com/*`
+     - Fallback: `*`
    * **Wildcard web origins** to allow CORS from any MTA instance
    * OpenID Connect protocol enabled
-   * Public client configuration
+   * Public client configuration (or confidential if secret provided)
 5. Saves authentication details to AgnosticD user info:
    * Client ID
    * Realm name
@@ -124,8 +127,8 @@ The role provides the following information via `agnosticd_user_info`:
 | `mta_keycloak_issuer`
 | The issuer URL for the realm
 
-| `mta_keycloak_redirect_pattern`
-| The wildcard redirect URI pattern (e.g., `https://mta-*.apps.cluster.example.com/*`)
+| `mta_keycloak_callback_path`
+| The OIDC callback path (`/hub/oidc-callback`)
 
 | `mta_keycloak_client_secret`
 | The client secret (only present if configured as confidential client)
