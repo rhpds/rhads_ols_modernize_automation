@@ -59,3 +59,10 @@ ocp4_workload_tenant_mta_rwx_supported: false
 ocp4_workload_tenant_mta_kai_solution_server_enabled: false
 ocp4_workload_tenant_mta_kai_llm_provider: openai
 ocp4_workload_tenant_mta_kai_llm_model: llama-scout-17b
+
+# OAuth Proxy Configuration
+# Enable OAuth proxy to provide OpenShift authentication without deploying Keycloak
+ocp4_workload_tenant_mta_oauth_proxy_enabled: false
+ocp4_workload_tenant_mta_oauth_proxy_image: quay.io/openshift/origin-oauth-proxy:4.14
+ocp4_workload_tenant_mta_oauth_proxy_route_name: mta-secure
+ocp4_workload_tenant_mta_oauth_proxy_enable_rbac: false

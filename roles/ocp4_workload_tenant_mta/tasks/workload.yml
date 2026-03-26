@@ -39,22 +39,33 @@
     state: present
     definition: "{{ lookup('template', 'application.yaml.j2') }}"
 
-- name: Save MTA user info (single user, auth enabled)
-  when: ocp4_workload_tenant_mta_feature_auth_required | default(true)
+- name: Wait for OAuth proxy route (when enabled)
+  when: ocp4_workload_tenant_mta_oauth_proxy_enabled | bool
+  kubernetes.core.k8s_info:
+    api_version: route.openshift.io/v1
+    kind: Route
+    name: "{{ ocp4_workload_tenant_mta_oauth_proxy_route_name }}"
+    namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
+  register: r_oauth_route
+  retries: 30
+  delay: 10
+  until:
+  - r_oauth_route.resources | length > 0
+  - r_oauth_route.resources[0].spec.host is defined
+
+- name: Save MTA user info (OAuth proxy enabled)
+  when: ocp4_workload_tenant_mta_oauth_proxy_enabled | bool
   agnosticd.core.agnosticd_user_info:
     data:
-      mta_url: >-
-        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-        openshift_cluster_ingress_domain }}
-      mta_api_url: >-
-        https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
-        openshift_cluster_ingress_domain }}/hub
+      mta_url: "https://{{ r_oauth_route.resources[0].spec.host }}"
+      mta_api_url: "https://{{ r_oauth_route.resources[0].spec.host }}/hub"
       mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
+      mta_auth: "OpenShift OAuth - use your OpenShift credentials"
       tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
       tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
 
-- name: Save MTA user info (single user, auth disabled)
-  when: not ocp4_workload_tenant_mta_feature_auth_required | default(true)
+- name: Save MTA user info (OAuth proxy dinabled)
+  when: not ocp4_workload_tenant_mta_oauth_proxy_enabled | bool
   agnosticd.core.agnosticd_user_info:
     data:
       mta_url: >-
