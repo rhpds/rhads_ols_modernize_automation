@@ -75,8 +75,9 @@ spec:
           enabled: {{ ocp4_workload_tenant_mta_oauth_proxy_enabled }}
 {% if ocp4_workload_tenant_mta_oauth_proxy_enabled | bool %}
           image: {{ ocp4_workload_tenant_mta_oauth_proxy_image }}
-          routeName: {{ ocp4_workload_tenant_mta_oauth_proxy_route_name }}
+          routeName: mta-secure
           enableRBAC: {{ ocp4_workload_tenant_mta_oauth_proxy_enable_rbac }}
 {% endif %}
         apiRoute:
           enabled: true
+          routeName: mta-api
