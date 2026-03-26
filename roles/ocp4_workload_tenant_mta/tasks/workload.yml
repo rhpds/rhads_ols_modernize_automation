@@ -64,7 +64,7 @@
       tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
       tackle_password: "{{ ocp4_workload_tenant_mta_password }}"
 
-- name: Save MTA user info (OAuth proxy dinabled)
+- name: Save MTA user info (OAuth proxy disabled)
   when: not ocp4_workload_tenant_mta_oauth_proxy_enabled | bool
   agnosticd.core.agnosticd_user_info:
     data:
