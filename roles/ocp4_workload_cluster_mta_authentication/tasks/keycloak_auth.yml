@@ -70,11 +70,11 @@
       name: "Migration Toolkit for Applications"
       description: "OpenID Connect client for MTA (cluster-wide)"
       enabled: true
-      protocol: "{{ ocp4_workload_cluster_mta_authentication_client_protocol }}"
+      protocol: openid-connect
       publicClient: "{{ true if ocp4_workload_cluster_mta_authentication_client_secret | default('') | length == 0 else false }}"
-      directAccessGrantsEnabled: "{{ ocp4_workload_cluster_mta_authentication_client_direct_access_grants }}"
-      standardFlowEnabled: "{{ ocp4_workload_cluster_mta_authentication_client_standard_flow }}"
-      implicitFlowEnabled: "{{ ocp4_workload_cluster_mta_authentication_client_implicit_flow }}"
+      directAccessGrantsEnabled: true
+      standardFlowEnabled: true
+      implicitFlowEnabled: false
       redirectUris:
         - "{{ _mta_redirect_pattern }}"
         - "*"

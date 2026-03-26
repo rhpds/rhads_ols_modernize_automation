@@ -11,13 +11,6 @@ ocp4_workload_cluster_mta_authentication_keycloak_url: ""
 # MTA Configuration
 ocp4_workload_cluster_mta_authentication_mta_client_id: mta-client
 
-# Keycloak Client Configuration
-ocp4_workload_cluster_mta_authentication_client_protocol: openid-connect
-ocp4_workload_cluster_mta_authentication_client_public: true
-ocp4_workload_cluster_mta_authentication_client_direct_access_grants: true
-ocp4_workload_cluster_mta_authentication_client_standard_flow: true
-ocp4_workload_cluster_mta_authentication_client_implicit_flow: false
-
 # Optional client secret for confidential clients
 # If set, the client will be configured as confidential instead of public
 ocp4_workload_cluster_mta_authentication_client_secret: ""
