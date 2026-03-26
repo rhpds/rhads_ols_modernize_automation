@@ -6,7 +6,7 @@
       kubernetes.core.k8s_info:
         api_version: route.openshift.io/v1
         kind: Route
-        name: "{{ ocp4_workload_cluster_mta_authentication_keycloak_route_name }}"
+        name: keycloak
         namespace: "{{ ocp4_workload_cluster_mta_authentication_keycloak_namespace }}"
       register: r_keycloak_route
 

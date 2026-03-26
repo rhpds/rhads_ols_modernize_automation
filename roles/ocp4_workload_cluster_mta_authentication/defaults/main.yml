@@ -5,7 +5,6 @@ ocp4_workload_cluster_mta_authentication_type: keycloak
 
 # Keycloak Configuration
 ocp4_workload_cluster_mta_authentication_keycloak_namespace: keycloak
-ocp4_workload_cluster_mta_authentication_keycloak_route_name: keycloak
 ocp4_workload_cluster_mta_authentication_keycloak_realm: ""
 
 # MTA Configuration

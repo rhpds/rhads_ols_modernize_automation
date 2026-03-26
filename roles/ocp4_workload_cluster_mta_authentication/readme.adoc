@@ -31,12 +31,7 @@ NOTE: This is a cluster-level role that configures a single Keycloak client with
 | `ocp4_workload_cluster_mta_authentication_keycloak_namespace`
 | `keycloak`
 | No
-| Keycloak deployment namespace
-
-| `ocp4_workload_cluster_mta_authentication_keycloak_route_name`
-| `keycloak`
-| No
-| Keycloak route name (used to auto-detect Keycloak URL)
+| Keycloak deployment namespace (route name 'keycloak' is hard-coded)
 
 | `ocp4_workload_cluster_mta_authentication_keycloak_realm`
 | `""`
@@ -73,9 +68,8 @@ NOTE: This is a cluster-level role that configures a single Keycloak client with
       vars:
         ocp4_workload_cluster_mta_authentication_type: keycloak
         ocp4_workload_cluster_mta_authentication_keycloak_realm: my-realm
-        # Optional: Override defaults if needed
+        # Optional: Override namespace if needed
         # ocp4_workload_cluster_mta_authentication_keycloak_namespace: keycloak
-        # ocp4_workload_cluster_mta_authentication_keycloak_route_name: keycloak
 ----
 
 == What This Role Does
