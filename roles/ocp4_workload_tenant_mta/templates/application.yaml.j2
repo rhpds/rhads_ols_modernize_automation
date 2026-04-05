@@ -79,5 +79,5 @@ spec:
           enableRBAC: {{ ocp4_workload_tenant_mta_oauth_proxy_enable_rbac }}
 {% endif %}
         apiRoute:
-          enabled: true
+          enabled: {{ ocp4_workload_tenant_mta_api_route_enabled }}
           routeName: mta-api
