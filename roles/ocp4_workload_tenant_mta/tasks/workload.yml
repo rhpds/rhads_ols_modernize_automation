@@ -59,8 +59,11 @@
     data:
       mta_url: "https://mta-secure-{{ ocp4_workload_tenant_mta_namespace }}.{{
         openshift_cluster_ingress_domain }}"
-      mta_api_url: "{{ https://mta-api-{{ ocp4_workload_tenant_mta_namespace }}.{{
-        openshift_cluster_ingress_domain if ocp4_workload_tenant_mta_api_route_enabled else omit }}"
+      mta_api_url: "{{ 
+        'https://mta-api-' ~ ocp4_workload_tenant_mta_namespace ~ '.' ~ openshift_cluster_ingress_domain
+        if ocp4_workload_tenant_mta_api_route_enabled
+        else omit
+      }}"
       mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
       mta_auth: "OpenShift OAuth - use your OpenShift credentials"
       tackle_user: "{{ ocp4_workload_tenant_mta_user }}"
@@ -73,6 +76,9 @@
       mta_url: >-
         https://mta-{{ ocp4_workload_tenant_mta_namespace }}.{{
         openshift_cluster_ingress_domain }}
-      mta_api_url: "{{ https://mta-api-{{ ocp4_workload_tenant_mta_namespace }}.{{
-        openshift_cluster_ingress_domain if ocp4_workload_tenant_mta_api_route_enabled else omit }}"
+      mta_api_url: "{{ 
+        'https://mta-api-' ~ ocp4_workload_tenant_mta_namespace ~ '.' ~ openshift_cluster_ingress_domain
+        if ocp4_workload_tenant_mta_api_route_enabled
+        else omit
+      }}"
       mta_namespace: "{{ ocp4_workload_tenant_mta_namespace }}"
