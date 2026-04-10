@@ -1,0 +1,29 @@
+---
+- name: Remove DevSpaces OAuth watcher deployment
+  kubernetes.core.k8s:
+    state: absent
+    api_version: apps/v1
+    kind: Deployment
+    name: devspaces-oauth-watcher
+    namespace: "{{ ocp4_workload_cluster_mta_devspaces_watcher_namespace }}"
+
+- name: Remove DevSpaces OAuth watcher ClusterRoleBinding
+  kubernetes.core.k8s:
+    state: absent
+    api_version: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    name: devspaces-oauth-watcher
+
+- name: Remove DevSpaces OAuth watcher ClusterRole
+  kubernetes.core.k8s:
+    state: absent
+    api_version: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    name: devspaces-oauth-watcher
+
+- name: Remove DevSpaces OAuth watcher namespace
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Namespace
+    name: "{{ ocp4_workload_cluster_mta_devspaces_watcher_namespace }}"

@@ -1,0 +1,9 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: devspaces-oauth-watcher
+rules:
+- apiGroups: ["oauth.openshift.io"]
+  resources: ["oauthclients"]
+  verbs: ["get", "list", "watch", "patch"]
