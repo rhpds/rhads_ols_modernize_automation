@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: ocp4_workload_cluster_mta
+  author:
+  - Tyrell Reddy <treddy@redhat.com>
+  description: |
+    Deploys cluster-wide MTA utilities including DevSpaces OAuth watcher
+  platforms: []
+  license: GNU General Public License v3.0
+  galaxy_tags:
+  - ocp4
+  - openshift
+  - mta
+  - devspaces
+dependencies: []

@@ -1,0 +1,151 @@
+= ocp4_workload_cluster_mta - Deploy Cluster-Wide MTA Utilities
+
+== Role Overview
+
+This role deploys cluster-wide utilities for Migration Toolkit for Applications (MTA) labs.
+
+Currently includes:
+
+* *DevSpaces OAuth Watcher*: Automatically maintains DevSpaces OAuthClient grantMethod as 'auto' to prevent iframe authentication issues
+
+== Supported Versions
+
+* OpenShift 4.18+
+* DevSpaces 3.x+
+
+== Requirements
+
+* OpenShift cluster with cluster-admin access
+* DevSpaces operator installed (for watcher functionality)
+
+== Role Variables
+
+[cols="3,2,1,4",options="header"]
+|===
+| Variable
+| Default Value
+| Required
+| Description
+
+| ocp4_workload_cluster_mta_devspaces_watcher_namespace
+| openshift-devspaces
+| No
+| Namespace where DevSpaces OAuth watcher will be deployed
+
+| ocp4_workload_cluster_mta_devspaces_watcher_oauth_client_name
+| openshift-devspaces-client
+| No
+| Name of the DevSpaces OAuthClient to watch
+
+|===
+
+== DevSpaces OAuth Watcher
+
+=== Purpose
+
+The DevSpaces operator forces the OAuthClient `grantMethod` to `prompt`, which causes iframe authentication issues in some scenarios. This watcher continuously monitors the OAuthClient and automatically sets `grantMethod` to `auto` whenever it changes.
+
+=== Architecture
+
+Uses a producer-consumer pattern:
+
+* *Producer Thread*: Watches Kubernetes events on the OAuthClient via `oc get --watch`
+* *Consumer Thread*: Processes events sequentially and patches the OAuthClient when needed
+* *Named Pipe (FIFO)*: Buffers events between producer and consumer
+
+=== How It Works
+
+1. Producer captures all OAuthClient change events in real-time
+2. Events are queued in a named pipe (FIFO)
+3. Consumer processes events sequentially
+4. When `grantMethod` changes to anything other than `auto`, it patches it back
+5. Reaction time: ~1-2 seconds
+
+=== Resources Deployed
+
+* ServiceAccount: `devspaces-oauth-watcher`
+* ClusterRole: `devspaces-oauth-watcher` (permissions to watch/patch OAuthClients)
+* ClusterRoleBinding: Links ServiceAccount to ClusterRole
+* ConfigMap: Contains the watcher bash script
+* Deployment: Runs the watcher (1 replica, Recreate strategy)
+
+== Example Playbook
+
+[source,yaml]
+----
+- name: Deploy MTA cluster utilities
+  hosts: localhost
+  tasks:
+  - name: Deploy DevSpaces OAuth watcher
+    ansible.builtin.include_role:
+      name: ocp4_workload_cluster_mta
+    vars:
+      ACTION: provision
+----
+
+== Removal
+
+To remove the watcher:
+
+[source,yaml]
+----
+- name: Remove MTA cluster utilities
+  ansible.builtin.include_role:
+    name: ocp4_workload_cluster_mta
+  vars:
+    ACTION: destroy
+----
+
+== Testing
+
+After deployment, verify the watcher is working:
+
+[source,bash]
+----
+# Check deployment
+oc get deployment devspaces-oauth-watcher -n openshift-devspaces
+
+# Check logs
+oc logs -n openshift-devspaces -l app=devspaces-oauth-watcher
+
+# Test: Manually change grantMethod to 'prompt'
+oc patch oauthclient openshift-devspaces-client --type=merge -p '{"grantMethod":"prompt"}'
+
+# Verify watcher corrects it (check logs)
+oc get oauthclient openshift-devspaces-client -o jsonpath='{.grantMethod}'
+# Should return: auto
+----
+
+== Troubleshooting
+
+=== Watcher not starting
+
+Check RBAC permissions:
+[source,bash]
+----
+oc get clusterrolebinding devspaces-oauth-watcher
+oc get clusterrole devspaces-oauth-watcher
+----
+
+=== Watcher not patching
+
+Check logs for errors:
+[source,bash]
+----
+oc logs -n openshift-devspaces -l app=devspaces-oauth-watcher --tail=100
+----
+
+=== View watcher activity
+
+[source,bash]
+----
+oc logs -n openshift-devspaces -l app=devspaces-oauth-watcher -f
+----
+
+== License
+
+GNU General Public License v3.0
+
+== Author
+
+Tony Reddy (treddy@redhat.com)

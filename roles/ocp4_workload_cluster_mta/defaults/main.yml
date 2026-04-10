@@ -1,0 +1,4 @@
+---
+# DevSpaces OAuth Watcher Configuration
+ocp4_workload_cluster_mta_devspaces_watcher_namespace: openshift-devspaces
+ocp4_workload_cluster_mta_devspaces_watcher_oauth_client_name: openshift-devspaces-client
